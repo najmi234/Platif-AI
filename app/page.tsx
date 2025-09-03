@@ -214,6 +214,13 @@ export default function Home() {
 
   useEffect(() => {
     if (plat === "..." || !plat) return;
+
+    if (plat === "0") {
+      // kalau Jetson kirim "0", artinya plat tidak terdaftar
+      setDataKendaraan(null);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const res = await fetch(
@@ -229,6 +236,7 @@ export default function Home() {
         console.error("Gagal ambil data Firebase:", err);
       }
     };
+
     fetchData();
   }, [plat]);
 
@@ -309,7 +317,11 @@ export default function Home() {
           {/* Kiri: Info Kendaraan */}
           <Card className="rounded-2xl shadow-lg border border-gray-200 bg-white">
             <CardContent className="flex flex-col items-center space-y-6 p-6">
-              {dataKendaraan ? (
+              {plat === "0" ? (
+                <p className="text-red-600 font-semibold text-center text-lg">
+                  Plat nomor tidak terdaftar sebagai penerima BBM bersubsidi.
+                </p>
+              ) :dataKendaraan ? (
                 <>
                   {/* Foto kendaraan */}
                   <div className="w-96 h-64">
