@@ -318,7 +318,7 @@ export default function Home() {
           <Card className="rounded-2xl shadow-lg border border-gray-200 bg-white">
             <CardContent className="flex flex-col items-center space-y-6 p-6">
               {plat === "0" ? (
-                <p className="text-red-600 font-black text-center text-9xl">
+                <p className="text-red-600 font-bold text-center text-3xl">
                   Plat nomor tidak terdaftar sebagai penerima BBM bersubsidi.
                 </p>
               ) :dataKendaraan ? (
