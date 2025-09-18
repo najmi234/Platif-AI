@@ -15,7 +15,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -50,7 +50,8 @@ interface Penjualan {
 
 interface ChartData {
   date: string;
-  nominal: number;
+  pertalite: number;
+  solar: number;
 }
 
 interface StatCardProps {
@@ -77,21 +78,21 @@ type ColorType = "blue" | "green" | "purple" | "orange";
 
 // ====== DATA DUMMY UNTUK CHART (UNTUK DEMO) ======
 const mockChartData: ChartData[] = [
-  { date: '2025-09-01', nominal: 505000 },
-  { date: '2025-09-02', nominal: 387200 },
-  { date: '2025-09-03', nominal: 275000 },
-  { date: '2025-09-04', nominal: 623000 },
-  { date: '2025-09-05', nominal: 315700 },
-  { date: '2025-09-06', nominal: 330600 },
-  { date: '2025-09-07', nominal: 419000 },
-  { date: '2025-09-08', nominal: 422400 },
-  { date: '2025-09-09', nominal: 295200 },
-  { date: '2025-09-10', nominal: 576000 },
-  { date: '2025-09-11', nominal: 371800 },
-  { date: '2025-09-12', nominal: 267000 },
-  { date: '2025-09-13', nominal: 591000 },
-  { date: '2025-09-14', nominal: 343200 },
-  { date: '2025-09-15', nominal: 316200 }
+  { date: '2025-09-01', pertalite: 320000, solar: 185000 },
+  { date: '2025-09-02', pertalite: 245000, solar: 142200 },
+  { date: '2025-09-03', pertalite: 180000, solar: 95000 },
+  { date: '2025-09-04', pertalite: 410000, solar: 213000 },
+  { date: '2025-09-05', pertalite: 225700, solar: 90000 },
+  { date: '2025-09-06', pertalite: 260600, solar: 70000 },
+  { date: '2025-09-07', pertalite: 335000, solar: 84000 },
+  { date: '2025-09-08', pertalite: 342400, solar: 80000 },
+  { date: '2025-09-09', pertalite: 205200, solar: 90000 },
+  { date: '2025-09-10', pertalite: 385000, solar: 191000 },
+  { date: '2025-09-11', pertalite: 285800, solar: 86000 },
+  { date: '2025-09-12', pertalite: 180000, solar: 87000 },
+  { date: '2025-09-13', pertalite: 405000, solar: 186000 },
+  { date: '2025-09-14', pertalite: 268200, solar: 75000 },
+  { date: '2025-09-15', pertalite: 235200, solar: 81000 }
 ];
 
 export default function Dashboard() {
@@ -169,25 +170,40 @@ export default function Dashboard() {
       orange: "text-orange-600"
     };
 
-    const backgroundClasses: Record<ColorType, string> = {
+    const backgroundClr: Record<ColorType, string> = {
       blue: "bg-blue-50",
       green: "bg-green-50",
       purple: "bg-purple-50", 
       orange: "bg-orange-50"
     };
 
+    const backgroundClasses: Record<ColorType, string> = {
+      blue: "bg-blue-100",
+      green: "bg-green-100",
+      purple: "bg-purple-100", 
+      orange: "bg-orange-100"
+    };
+
+    const strip: Record<ColorType, string> = {
+      blue: "bg-blue-600 shadow-blue-500/50",
+      green: "bg-green-600 shadow-green-500/50",
+      purple: "bg-purple-600 shadow-purple-500/50", 
+      orange: "bg-orange-600 shadow-orange-500/50"
+    };
+
     return (
-      <Card className="relative overflow-hidden border-0 shadow-sm">
+      <Card className={`relative overflow-hidden border-0 shadow-md py-0 ${backgroundClr[color]}`}>
+        {/* Garis aksen dengan shadow */}
+        <div className={`absolute left-0 top-1/4 h-2/5 w-1 rounded-full shadow-md ${strip[color]}`} />
+        
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-lg ${backgroundClasses[color]}`}>
-                <Icon className={`h-4 w-4 ${colorClasses[color]}`} />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500">{title}</p>
-                <p className={`text-lg font-bold ${colorClasses[color]}`}>{value}</p>
-              </div>
+            <div>
+              <p className="text-sm font-normal text-gray-500">{title}</p>
+              <p className={`text-2xl font-bold ${colorClasses[color]}`}>{value}</p>
+            </div>
+            <div className={`p-2 rounded-lg ${backgroundClasses[color]}`}>
+              <Icon className={`h-4 w-4 ${colorClasses[color]}`} />
             </div>
           </div>
           <div className="flex items-center mt-2 space-x-1">
@@ -196,10 +212,10 @@ export default function Dashboard() {
             ) : (
               <TrendingDown className="h-3 w-3 text-red-500" />
             )}
-            <span className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
               {isPositive ? '+' : ''}{change}%
             </span>
-            <span className="text-xs text-gray-500">Since last week</span>
+            <span className="text-sm text-gray-500">Since last week</span>
           </div>
         </CardContent>
       </Card>
@@ -426,9 +442,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-indigo-100 flex">
       {/* Sidebar */}
-      <div className="w-64 min-h-screen flex flex-col justify-between py-7 px-6">
+      <div className="w-64 h-screen fixed left-0 top-0 flex flex-col py-7 px-6 z-10">
         <img src="/Platif-AI.png" alt="Logo 1" className="h-12 w-auto object-contain mb-15" />
-        <div className="space-y-3">
+        
+        <div className="flex-1 space-y-3 overflow-y-auto">
           {sidebarItems.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -447,18 +464,14 @@ export default function Dashboard() {
             );
           })}
         </div>
-
-        <div className="flex justify-center p-5 mt-auto">
-          <img
-            src="/vect.png"
-            alt="Vector Illustration"
-            className="w-full max-w-xs h-auto object-contain rounded-2xl"
-          />
+        
+        <div className="flex justify-center p-5">
+          <img src="/vect.png" alt="Vector Illustration" className="w-full max-w-xs h-auto object-contain rounded-2xl" />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col ml-64">
         {/* Navbar */}
         <nav className="px-10 py-6 flex items-center justify-between">
           <div>
@@ -480,49 +493,69 @@ export default function Dashboard() {
         {/* Content */}
         <div className="flex-1 px-6 pb-6">
           
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              title="Total Transaksi"
-              value={stats.totalTransactions.toString()}
-              change={6.5}
-              icon={FileText}
-              color="blue"
-            />
-            <StatCard
-              title="Total Liter"
-              value={`${stats.totalLiters.toFixed(2)} L`}
-              change={-0.10}
-              icon={Fuel}
-              color="green"
-            />
-            <StatCard
-              title="Total Revenue"
-              value={formatRupiah(stats.totalRevenue)}
-              change={-0.2}
-              icon={DollarSign}
-              color="purple"
-            />
-            <StatCard
-              title="Jenis BBM"
-              value={stats.uniqueFuelTypes.toString()}
-              change={11.5}
-              icon={Users}
-              color="orange"
-            />
-          </div>
+          {/* Stats Cards Container */}
+          <Card className="border-0 shadow-sm mb-6">
+            <CardHeader className="flex items-center gap-2 space-y-0 border-b sm:flex-row">
+              <div className="grid flex-1 gap-1">
+                <CardTitle className="text-xl font-bold text-gray-800">
+                  My Analytics Overview
+                </CardTitle>
+              </div>
+              <Select 
+                value={filters.jenisBBM || "all"} 
+                onValueChange={(value) => setFilters({...filters, jenisBBM: value === "all" ? "" : value})}
+              >
+                <SelectTrigger className="w-[160px] rounded-lg">
+                  <SelectValue placeholder="All Fuel Types" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="all" className="rounded-lg">All Fuel Types</SelectItem>
+                  <SelectItem value="Pertalite" className="rounded-lg">Pertalite</SelectItem>
+                  <SelectItem value="Solar" className="rounded-lg">Solar</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardHeader>
+            <CardContent className="px-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  title="Total Transaksi"
+                  value={stats.totalTransactions.toString()}
+                  change={6.5}
+                  icon={FileText}
+                  color="blue"
+                />
+                <StatCard
+                  title="Total Liter"
+                  value={`${stats.totalLiters.toFixed(2)} L`}
+                  change={-0.10}
+                  icon={Fuel}
+                  color="green"
+                />
+                <StatCard
+                  title="Total Revenue"
+                  value={formatRupiah(stats.totalRevenue)}
+                  change={-0.2}
+                  icon={DollarSign}
+                  color="purple"
+                />
+                <StatCard
+                  title="Jenis BBM"
+                  value={stats.uniqueFuelTypes.toString()}
+                  change={11.5}
+                  icon={Users}
+                  color="orange"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Area Chart */}
           <Card className="border-0 shadow-sm mb-6">
-            <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+            <CardHeader className="flex items-center gap-2 space-y-0 border-b sm:flex-row">
               <div className="grid flex-1 gap-1">
-                <CardTitle className="text-xl font-semibold text-gray-800">
+                <CardTitle className="text-xl font-bold text-gray-800">
                   Sales Analytics 
-                  <span className="text-sm font-normal text-red-500 ml-2">(Data Dummy untuk Demo)</span>
                 </CardTitle>
-                <CardDescription className="text-gray-500">
-                  Showing sales trend for the selected period
-                </CardDescription>
               </div>
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className="w-[160px] rounded-lg">
@@ -535,14 +568,18 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
             </CardHeader>
-            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-              <div className="aspect-auto h-[250px] w-full">
+            <CardContent className="px-2 sm:px-6">
+              <div className="aspect-auto h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <linearGradient id="colorPertalite" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8EC5FF" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#8EC5FF" stopOpacity={0.1} />
+                      </linearGradient>
+                      <linearGradient id="colorSolar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2B7FFF" stopOpacity={0.6} />
+                        <stop offset="95%" stopColor="#2B7FFF" stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -563,13 +600,30 @@ export default function Dashboard() {
                       className="text-xs text-gray-500"
                     />
                     <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      wrapperStyle={{ paddingTop: '10px', color: '#000' }} 
+                      iconType="circle" // kotaknya jadi rounded (pakai circle)
+                      iconSize={12}     // biar ukurannya pas
+                    />
                     <Area
-                      type="monotone"
-                      dataKey="nominal"
-                      stroke="#3b82f6"
+                      type="natural"
+                      dataKey="pertalite"
+                      stackId="1"
+                      stroke="#8EC5FF"
                       strokeWidth={2}
-                      fill="url(#colorRevenue)"
+                      fill="url(#colorPertalite)"
                       fillOpacity={1}
+                      name="Pertalite"
+                    />
+                    <Area
+                      type="natural"
+                      dataKey="solar"
+                      stackId="2"
+                      stroke="#2B7FFF"
+                      strokeWidth={2}
+                      fill="url(#colorSolar)"
+                      fillOpacity={1}
+                      name="Solar"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -578,48 +632,50 @@ export default function Dashboard() {
           </Card>
 
           {/* Table Section */}
-          <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white/40 h-full shadow-lg">
+          <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-white/40 shadow-lg max-w-full overflow-hidden">
             {/* Search, Filter & Download */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-4">
-                <div className="relative rounded-full shadow-md">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-1">
+                <div className="relative rounded-full shadow-md w-full sm:w-auto">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Cari data penjualan..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 bg-white/60 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-80"
+                    className="pl-10 pr-4 py-2 bg-white/60 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 lg:w-80"
                   />
                 </div>
 
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all shadow-md ${
-                    showFilters ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/60 text-gray-700 hover:bg-gray-200/60'
-                  }`}
-                >
-                  <Filter className="w-4 h-4" />
-                  <span>Filter</span>
-                </button>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all shadow-md ${
+                      showFilters ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/60 text-gray-700 hover:bg-gray-200/60'
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Filter</span>
+                  </button>
 
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/60 text-gray-700 rounded-full hover:bg-gray-200/60 transition-all shadow-md"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Reset</span>
-                </button>
+                  <button
+                    onClick={resetFilters}
+                    className="flex items-center space-x-2 px-4 py-2 bg-white/60 text-gray-700 rounded-full hover:bg-gray-200/60 transition-all shadow-md"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Reset</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <span className="text-sm text-gray-600 whitespace-nowrap">
                   Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredData.length)} dari {filteredData.length} data
                 </span>
                 
                 <button
                   onClick={handleDownload}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all shadow-md"
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all shadow-md whitespace-nowrap"
                 >
                   <svg
                     className="w-4 h-4"
@@ -641,8 +697,8 @@ export default function Dashboard() {
 
             {/* Filter Panel */}
             {showFilters && (
-              <div className="bg-white/40 rounded-2xl p-4 mb-2 border border-white/30">
-                <div className="grid grid-cols-3 gap-4">
+              <div className="bg-white/40 rounded-2xl p-4 mb-4 border border-white/30">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Filter Jenis BBM */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -717,141 +773,146 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Table */}
-            <div className="bg-white/ mt-6 rounded-2xl border border-white/40 overflow-hidden shadow-md px-5">
-              {loading ? (
-                <div className="flex items-center justify-center h-64 text-gray-500">
-                  <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                  Loading data...
-                </div>
-              ) : (
-                <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <SortableHeader field="no">No</SortableHeader>
-                        <SortableHeader field="idPembelian">ID Pembelian</SortableHeader>
-                        <SortableHeader field="plat">Plat Nomor</SortableHeader>
-                        <SortableHeader field="jenisBBM">Jenis BBM</SortableHeader>
-                        <SortableHeader field="liter">Liter</SortableHeader>
-                        <SortableHeader field="nominal">Nominal</SortableHeader>
-                        <SortableHeader field="waktu">Waktu Pembelian</SortableHeader>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedData.map((item) => (
-                        <TableRow key={item.idPembelian}>
-                          <TableCell>{item.no}</TableCell>
-                          <TableCell className="font-medium text-blue-600">
-                            {item.idPembelian}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {item.plat}
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.jenisBBM === 'Pertalite' 
-                                ? 'bg-green-100 text-green-800' 
-                                : item.jenisBBM === 'Solar'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {item.jenisBBM}
-                            </span>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {item.liter.toFixed(2)} L
-                          </TableCell>
-                          <TableCell className="font-medium text-green-600">
-                            {formatRupiah(item.nominal)}
-                          </TableCell>
-                          <TableCell className="text-medium">
-                            {formatDate(item.waktu)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {paginatedData.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                            Tidak ada data yang ditemukan
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+            {/* Table Container with Horizontal Scroll */}
+            <div className="w-full overflow-hidden">
+              <div className="bg-white/20 rounded-2xl border border-white/40 shadow-md">
+                {loading ? (
+                  <div className="flex items-center justify-center h-64 text-gray-500">
+                    <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                    Loading data...
+                  </div>
+                ) : (
+                  <>
+                    {/* Table with horizontal scroll on mobile */}
+                    <div className="overflow-x-auto">
+                      <Table className="min-w-full">
+                        <TableHeader>
+                          <TableRow>
+                            <SortableHeader field="no">No</SortableHeader>
+                            <SortableHeader field="idPembelian">ID Pembelian</SortableHeader>
+                            <SortableHeader field="plat">Plat Nomor</SortableHeader>
+                            <SortableHeader field="jenisBBM">Jenis BBM</SortableHeader>
+                            <SortableHeader field="liter">Liter</SortableHeader>
+                            <SortableHeader field="nominal">Nominal</SortableHeader>
+                            <SortableHeader field="waktu">Waktu Pembelian</SortableHeader>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedData.map((item) => (
+                            <TableRow key={item.idPembelian}>
+                              <TableCell className="whitespace-nowrap">{item.no}</TableCell>
+                              <TableCell className="font-medium text-blue-600 whitespace-nowrap">
+                                {item.idPembelian}
+                              </TableCell>
+                              <TableCell className="font-medium whitespace-nowrap">
+                                {item.plat}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  item.jenisBBM === 'Pertalite' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : item.jenisBBM === 'Solar'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {item.jenisBBM}
+                                </span>
+                              </TableCell>
+                              <TableCell className="font-medium whitespace-nowrap">
+                                {item.liter.toFixed(2)} L
+                              </TableCell>
+                              <TableCell className="font-medium text-green-600 whitespace-nowrap">
+                                {formatRupiah(item.nominal)}
+                              </TableCell>
+                              <TableCell className="text-medium whitespace-nowrap">
+                                {formatDate(item.waktu)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {paginatedData.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                                Tidak ada data yang ditemukan
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
 
-                  {/* Pagination */}
-                  {filteredData.length > 0 && (
-                    <div className="px-6 py-4 bg-white/30 border-t border-white/30 flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">Tampilkan</span>
-                        <select
-                          value={itemsPerPage}
-                          onChange={(e) => {
-                            setItemsPerPage(Number(e.target.value))
-                            setCurrentPage(1)
-                          }}
-                          className="px-2 py-1 bg-white/60 rounded border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value={5}>5</option>
-                          <option value={10}>10</option>
-                          <option value={25}>25</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
-                        <span className="text-sm text-gray-600">per halaman</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          disabled={currentPage === 1}
-                          className="p-2 rounded-lg bg-white/60 text-gray-600 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-
-                        <div className="flex space-x-1">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            let pageNumber
-                            if (totalPages <= 5) {
-                              pageNumber = i + 1
-                            } else if (currentPage <= 3) {
-                              pageNumber = i + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNumber = totalPages - 4 + i
-                            } else {
-                              pageNumber = currentPage - 2 + i
-                            }
-
-                            return (
-                              <button
-                                key={pageNumber}
-                                onClick={() => setCurrentPage(pageNumber)}
-                                className={`px-3 py-1 rounded-lg text-sm transition-all ${
-                                  currentPage === pageNumber
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-white/60 text-gray-600 hover:bg-white/80'
-                                }`}
-                              >
-                                {pageNumber}
-                              </button>
-                            )
-                          })}
+                    {/* Pagination */}
+                    {filteredData.length > 0 && (
+                      <div className="px-6 py-4 bg-white/30 border-t border-white/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">Tampilkan</span>
+                          <select
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                              setItemsPerPage(Number(e.target.value))
+                              setCurrentPage(1)
+                            }}
+                            className="px-2 py-1 bg-white/60 rounded border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                          </select>
+                          <span className="text-sm text-gray-600">per halaman</span>
                         </div>
 
-                        <button
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                          disabled={currentPage === totalPages}
-                          className="p-2 rounded-lg bg-white/60 text-gray-600 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg bg-white/60 text-gray-600 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+
+                          <div className="flex space-x-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNumber
+                              if (totalPages <= 5) {
+                                pageNumber = i + 1
+                              } else if (currentPage <= 3) {
+                                pageNumber = i + 1
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNumber = totalPages - 4 + i
+                              } else {
+                                pageNumber = currentPage - 2 + i
+                              }
+
+                              return (
+                                <button
+                                  key={pageNumber}
+                                  onClick={() => setCurrentPage(pageNumber)}
+                                  className={`px-3 py-1 rounded-lg text-sm transition-all ${
+                                    currentPage === pageNumber
+                                      ? 'bg-blue-500 text-white'
+                                      : 'bg-white/60 text-gray-600 hover:bg-white/80'
+                                  }`}
+                                >
+                                  {pageNumber}
+                                </button>
+                              )
+                            })}
+                          </div>
+
+                          <button
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg bg-white/60 text-gray-600 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </>
-              )}
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
