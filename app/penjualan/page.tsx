@@ -1,6 +1,7 @@
 
 "use client"
 
+import { withRole } from "@/lib/authguard";
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,12 +17,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  DollarSign, 
-  FileText, 
+import {
+  User,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  DollarSign,
+  FileText,
   Fuel,
   Search,
   Grid3X3,
@@ -36,6 +38,8 @@ import {
 } from 'lucide-react';
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation"
 
 // ====== INTERFACES ======
 interface Penjualan {
@@ -65,6 +69,7 @@ interface StatCardProps {
 interface SidebarItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  href: string;
 }
 
 interface SortableHeaderProps {
@@ -95,20 +100,24 @@ const mockChartData: ChartData[] = [
   { date: '2025-09-15', pertalite: 235200, solar: 81000 }
 ];
 
-export default function Dashboard() {
+function Penjualan() {
+  const pathname = usePathname()
+  const [user, setUser] = useState<{ name?: string } | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const [activeSection, setActiveSection] = useState<string>("Penjualan");
   const [data, setData] = useState<Penjualan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  
+
   // Sorting states
   const [sortField, setSortField] = useState<SortField>('no');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  
+
   // Filter states
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [filters, setFilters] = useState({
@@ -118,16 +127,17 @@ export default function Dashboard() {
 
   // Chart filter state
   const [timeRange, setTimeRange] = useState<string>('30d');
-  
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined
   });
 
   const sidebarItems: SidebarItem[] = [
-    { icon: Grid3X3, label: "Penerima" },
-    { icon: FileText, label: "Penjualan" },
-    { icon: MoreHorizontal, label: "Others" },
+    { icon: FileText, label: "Penjualan", href: "/penjualan" },
+    { icon: Grid3X3, label: "Penerima", href: "/penerima" },
+    { icon: User, label: "Kelola Akun", href: "/akun" },
+    { icon: MoreHorizontal, label: "Others", href: "/others" },
   ];
 
   // ====== UTILITY FUNCTIONS ======
@@ -153,19 +163,19 @@ export default function Dashboard() {
 
   const formatChartDate = (dateStr: string): string => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('id-ID', { 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('id-ID', {
+      month: 'short',
+      day: 'numeric'
     });
   };
 
   // ====== COMPONENTS ======
   const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, color = "blue" }) => {
     const isPositive = change >= 0;
-    
+
     const colorClasses: Record<ColorType, string> = {
       blue: "text-blue-600",
-      green: "text-green-600", 
+      green: "text-green-600",
       purple: "text-purple-600",
       orange: "text-orange-600"
     };
@@ -173,21 +183,21 @@ export default function Dashboard() {
     const backgroundClr: Record<ColorType, string> = {
       blue: "bg-blue-50",
       green: "bg-green-50",
-      purple: "bg-purple-50", 
+      purple: "bg-purple-50",
       orange: "bg-orange-50"
     };
 
     const backgroundClasses: Record<ColorType, string> = {
       blue: "bg-blue-100",
       green: "bg-green-100",
-      purple: "bg-purple-100", 
+      purple: "bg-purple-100",
       orange: "bg-orange-100"
     };
 
     const strip: Record<ColorType, string> = {
       blue: "bg-blue-600 shadow-blue-500/50",
       green: "bg-green-600 shadow-green-500/50",
-      purple: "bg-purple-600 shadow-purple-500/50", 
+      purple: "bg-purple-600 shadow-purple-500/50",
       orange: "bg-orange-600 shadow-orange-500/50"
     };
 
@@ -195,7 +205,7 @@ export default function Dashboard() {
       <Card className={`relative overflow-hidden border-0 shadow-md py-0 ${backgroundClr[color]}`}>
         {/* Garis aksen dengan shadow */}
         <div className={`absolute left-0 top-1/4 h-2/5 w-1 rounded-full shadow-md ${strip[color]}`} />
-        
+
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -223,18 +233,18 @@ export default function Dashboard() {
   };
 
   const SortableHeader: React.FC<SortableHeaderProps> = ({ field, children }) => (
-    <TableHead 
+    <TableHead
       className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center justify-between">
         {children}
         <div className="flex flex-col ml-1">
-          <ChevronUp 
-            className={`w-3 h-3 ${sortField === field && sortDirection === 'asc' ? 'text-blue-600' : 'text-gray-400'}`} 
+          <ChevronUp
+            className={`w-3 h-3 ${sortField === field && sortDirection === 'asc' ? 'text-blue-600' : 'text-gray-400'}`}
           />
-          <ChevronDown 
-            className={`w-3 h-3 -mt-1 ${sortField === field && sortDirection === 'desc' ? 'text-blue-600' : 'text-gray-400'}`} 
+          <ChevronDown
+            className={`w-3 h-3 -mt-1 ${sortField === field && sortDirection === 'desc' ? 'text-blue-600' : 'text-gray-400'}`}
           />
         </div>
       </div>
@@ -246,7 +256,7 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://platif-ai-default-rtdb.asia-southeast1.firebasedatabase.app/rwytSPBU1/SubsidiPump1.json"
+        "https://platif-ai-default-rtdb.asia-southeast1.firebasedatabase.app/rwytSPBU1.json"
       );
       const firebaseData = await response.json();
 
@@ -273,7 +283,7 @@ export default function Dashboard() {
 
         // Sort by waktu (newest first)
         dataArray.sort((a, b) => new Date(b.waktu).getTime() - new Date(a.waktu).getTime());
-        
+
         // Re-number after sorting
         dataArray.forEach((item, index) => {
           item.no = index + 1;
@@ -295,6 +305,14 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  const router = useRouter();
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setShowDropdown(false);
+    router.push("/login");
+  };
+
   // ====== SORTING & FILTERING ======
   const handleSort = (field: SortField): void => {
     if (sortField === field) {
@@ -309,17 +327,17 @@ export default function Dashboard() {
     let filtered = data.filter((item) => {
       const itemDate = new Date(item.waktu);
 
-      const matchesSearch = 
+      const matchesSearch =
         item.idPembelian?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.plat?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.jenisBBM?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.waktu?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesFilters = 
+
+      const matchesFilters =
         (!filters.jenisBBM || item.jenisBBM?.toLowerCase().includes(filters.jenisBBM.toLowerCase())) &&
         (!filters.plat || item.plat?.toLowerCase().includes(filters.plat.toLowerCase()));
 
-      const matchesDate = 
+      const matchesDate =
         (!dateRange?.from || itemDate >= dateRange.from) &&
         (!dateRange?.to || itemDate <= dateRange.to);
 
@@ -330,23 +348,23 @@ export default function Dashboard() {
     filtered.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
-      
+
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
       }
-      
+
       if (sortField === 'waktu') {
         const dateA = new Date(aVal as string).getTime();
         const dateB = new Date(bVal as string).getTime();
         return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
       }
-      
+
       if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDirection === 'asc' 
-          ? aVal.localeCompare(bVal) 
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
           : bVal.localeCompare(aVal);
       }
-      
+
       return 0;
     });
 
@@ -354,13 +372,13 @@ export default function Dashboard() {
   };
 
   const filteredData = getFilteredAndSortedData();
-  
+
   // ====== PREPARE CHART DATA ======
   const chartData = useMemo(() => {
     const now = new Date();
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
     const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    
+
     return mockChartData
       .filter(item => new Date(item.date) >= cutoffDate)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -372,7 +390,7 @@ export default function Dashboard() {
     const totalLiters = filteredData.reduce((sum, item) => sum + item.liter, 0);
     const totalRevenue = filteredData.reduce((sum, item) => sum + item.nominal, 0);
     const uniqueFuelTypes = new Set(filteredData.map(item => item.jenisBBM)).size;
-    
+
     return { totalTransactions, totalLiters, totalRevenue, uniqueFuelTypes };
   }, [filteredData]);
 
@@ -423,50 +441,70 @@ export default function Dashboard() {
   // ====== TOOLTIP CONTENT ======
   const CustomTooltip = ({ active, payload, label }: {
     active?: boolean;
-    payload?: Array<{ value: any }>;
+    payload?: Array<{ name: string; value: number; color: string }>;
     label?: string;
   }) => {
     if (active && payload && payload.length && label) {
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-medium text-gray-900">{formatChartDate(label)}</p>
-          <p className="text-blue-600">
-            Revenue: {formatRupiah(payload[0].value)}
-          </p>
+          {payload.map((entry, index) => (
+            <p key={index} className="flex items-center gap-2">
+              {/* kotak warna sesuai legend */}
+              <span
+                className="inline-block w-3 h-3 rounded-sm"
+                style={{ backgroundColor: entry.color }}
+              ></span>
+              <span className="text-gray-700 font-medium">
+                {entry.name}: <span className="text-blue-600">{formatRupiah(entry.value)}</span>
+              </span>
+            </p>
+          ))}
         </div>
       );
     }
     return null;
   };
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const getInitial = (name: string | undefined) => {
+    if (!name) return "?";
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-indigo-100 flex">
       {/* Sidebar */}
       <div className="w-64 h-screen fixed left-0 top-0 flex flex-col py-7 px-6 z-10">
-        <img src="/Platif-AI.png" alt="Logo 1" className="h-12 w-auto object-contain mb-15" />
-        
+        <img src="/Platif-AI.png" alt="Logo Platif-AI" className="h-12 w-auto object-contain mb-15" />
+
         <div className="flex-1 space-y-3 overflow-y-auto">
           {sidebarItems.map((item, index) => {
             const Icon = item.icon;
             return (
-              <button
+              <Link
                 key={index}
-                onClick={() => setActiveSection(item.label)}
-                className={`w-full flex items-center space-x-3 px-8 py-4 rounded-full transition-all ${
-                  item.label === activeSection
+                href={item.href} // ⬅️ ini jalan di Link
+                className={`w-full flex items-center space-x-3 px-8 py-4 rounded-full transition-all ${pathname === item.href
                     ? "bg-white/80 text-blue-600 shadow-lg border border-white/40"
-                    : "text-gray-600 hover:bg-white/40 hover:border hover:border-white/30"
-                }`}
+                    : "text-gray-600 hover:bg-white/60"
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-semibold">{item.label}</span>
-              </button>
+              </Link>
             );
           })}
         </div>
-        
-        <div className="flex justify-center p-5">
-          <img src="/vect.png" alt="Vector Illustration" className="w-full max-w-xs h-auto object-contain rounded-2xl" />
+
+        <div className="flex justify-center">
+          <img src="/vectt.png" alt='"Designed by macrovector / Freepik"http://www.freepik.com"' className="w-full h-auto" />
         </div>
       </div>
 
@@ -480,19 +518,48 @@ export default function Dashboard() {
             </h1>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                N
+          {/* Akun */}
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="flex items-center space-x-2 px-3 py-2 rounded"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {getInitial(user?.name)}
+                </div>
+                <span className="text-black font-medium">
+                  {user?.name || "Guest"}
+                </span>
               </div>
-              <span className="text-gray-700 font-medium">Najmi Umar Fauzi</span>
-            </div>
+              <svg
+                className={`w-4 h-4 text-black transition-transform ${showDropdown ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown */}
+            {showDropdown && (
+              <div className="absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 hover:rounded-lg"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </nav>
 
         {/* Content */}
         <div className="flex-1 px-6 pb-6">
-          
+
           {/* Stats Cards Container */}
           <Card className="border-0 shadow-sm mb-6">
             <CardHeader className="flex items-center gap-2 space-y-0 border-b sm:flex-row">
@@ -501,9 +568,9 @@ export default function Dashboard() {
                   My Analytics Overview
                 </CardTitle>
               </div>
-              <Select 
-                value={filters.jenisBBM || "all"} 
-                onValueChange={(value) => setFilters({...filters, jenisBBM: value === "all" ? "" : value})}
+              <Select
+                value={filters.jenisBBM || "all"}
+                onValueChange={(value) => setFilters({ ...filters, jenisBBM: value === "all" ? "" : value })}
               >
                 <SelectTrigger className="w-[160px] rounded-lg">
                   <SelectValue placeholder="All Fuel Types" />
@@ -539,7 +606,7 @@ export default function Dashboard() {
                   color="purple"
                 />
                 <StatCard
-                  title="Jenis BBM"
+                  title="Total Pembeli BBM Subsidi"
                   value={stats.uniqueFuelTypes.toString()}
                   change={11.5}
                   icon={Users}
@@ -554,7 +621,7 @@ export default function Dashboard() {
             <CardHeader className="flex items-center gap-2 space-y-0 border-b sm:flex-row">
               <div className="grid flex-1 gap-1">
                 <CardTitle className="text-xl font-bold text-gray-800">
-                  Sales Analytics 
+                  Sales Analytics
                 </CardTitle>
               </div>
               <Select value={timeRange} onValueChange={setTimeRange}>
@@ -583,8 +650,8 @@ export default function Dashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
@@ -592,7 +659,7 @@ export default function Dashboard() {
                       tickFormatter={formatChartDate}
                       className="text-xs text-gray-500"
                     />
-                    <YAxis 
+                    <YAxis
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
@@ -601,7 +668,7 @@ export default function Dashboard() {
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend
-                      wrapperStyle={{ paddingTop: '10px', color: '#000' }} 
+                      wrapperStyle={{ paddingTop: '10px', color: '#000' }}
                       iconType="circle" // kotaknya jadi rounded (pakai circle)
                       iconSize={12}     // biar ukurannya pas
                     />
@@ -650,9 +717,8 @@ export default function Dashboard() {
                 <div className="flex gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all shadow-md ${
-                      showFilters ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/60 text-gray-700 hover:bg-gray-200/60'
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all shadow-md ${showFilters ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-white/60 text-gray-700 hover:bg-gray-200/60'
+                      }`}
                   >
                     <Filter className="w-4 h-4" />
                     <span>Filter</span>
@@ -672,7 +738,7 @@ export default function Dashboard() {
                 <span className="text-sm text-gray-600 whitespace-nowrap">
                   Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredData.length)} dari {filteredData.length} data
                 </span>
-                
+
                 <button
                   onClick={handleDownload}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all shadow-md whitespace-nowrap"
@@ -808,13 +874,12 @@ export default function Dashboard() {
                                 {item.plat}
                               </TableCell>
                               <TableCell className="whitespace-nowrap">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  item.jenisBBM === 'Pertalite' 
-                                    ? 'bg-green-100 text-green-800' 
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.jenisBBM === 'Pertalite'
+                                    ? 'bg-green-100 text-green-800'
                                     : item.jenisBBM === 'Solar'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {item.jenisBBM}
                                 </span>
                               </TableCell>
@@ -888,11 +953,10 @@ export default function Dashboard() {
                                 <button
                                   key={pageNumber}
                                   onClick={() => setCurrentPage(pageNumber)}
-                                  className={`px-3 py-1 rounded-lg text-sm transition-all ${
-                                    currentPage === pageNumber
+                                  className={`px-3 py-1 rounded-lg text-sm transition-all ${currentPage === pageNumber
                                       ? 'bg-blue-500 text-white'
                                       : 'bg-white/60 text-gray-600 hover:bg-white/80'
-                                  }`}
+                                    }`}
                                 >
                                   {pageNumber}
                                 </button>
@@ -920,3 +984,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+export default withRole(Penjualan, ["admin"]);

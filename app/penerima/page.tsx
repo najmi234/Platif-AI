@@ -1,8 +1,9 @@
 "use client"
 
+import { withRole } from "@/lib/authguard";
 import React, { useState, useEffect } from "react"
 import {
-  Upload,
+  User,
   Search,
   Grid3X3,
   FileText,
@@ -26,6 +27,8 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation"
 
 interface Penerima {
   no: number
@@ -40,10 +43,20 @@ interface Penerima {
   tahunR: string
 }
 
+interface SidebarItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+}
+
 type SortField = keyof Penerima
 type SortDirection = 'asc' | 'desc'
 
-export default function Penerima() {
+function Penerima() {
+  const pathname = usePathname()
+  const [user, setUser] = useState<{ name?: string } | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const [activeSection, setActiveSection] = useState("Penjualan")
   const [data, setData] = useState<Penerima[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,11 +79,12 @@ export default function Penerima() {
     warnaK: ''
   })
 
-  const sidebarItems = [
-    { icon: Grid3X3, label: "Penerima" },
-    { icon: FileText, label: "Penjualan" },
-    { icon: MoreHorizontal, label: "Others" },
-  ]
+  const sidebarItems: SidebarItem[] = [
+    { icon: FileText, label: "Penjualan", href: "/penjualan" },
+    { icon: Grid3X3, label: "Penerima", href: "/penerima" },
+    { icon: User, label: "Kelola Akun", href: "/akun" },
+    { icon: MoreHorizontal, label: "Others", href: "/others" },
+  ];
 
   // Fetch data dari Firebase
   const fetchData = async () => {
@@ -103,6 +117,14 @@ export default function Penerima() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  const router = useRouter();
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setShowDropdown(false);
+    router.push("/login");
+  };
 
   // Sort function
   const handleSort = (field: SortField) => {
@@ -230,37 +252,45 @@ export default function Penerima() {
     </TableHead>
   )
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const getInitial = (name: string | undefined) => {
+    if (!name) return "?";
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-indigo-100 flex">
       {/* Sidebar */}
       <div className="w-64 min-h-screen flex flex-col justify-between py-7 px-6">
-        <img src="/Platif-AI.png" alt="Logo 1" className="h-12 w-auto object-contain mb-15" />
-        <div className="space-y-3">
+        <img src="/Platif-AI.png" alt="Logo PLatif-AI" className="h-12 w-auto object-contain mb-15" />
+        <div className="flex-1 space-y-3 overflow-y-auto">
           {sidebarItems.map((item, index) => {
-            const Icon = item.icon
+            const Icon = item.icon;
             return (
-              <button
+              <Link
                 key={index}
-                onClick={() => setActiveSection(item.label)}
+                href={item.href} // ⬅️ ini jalan di Link
                 className={`w-full flex items-center space-x-3 px-8 py-4 rounded-full transition-all ${
-                  item.label === activeSection
+                  pathname === item.href
                     ? "bg-white/80 text-blue-600 shadow-lg border border-white/40"
-                    : "text-gray-600 hover:bg-white/40 hover:border hover:border-white/30"
+                    : "text-gray-600 hover:bg-white/40"
                 }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-semibold">{item.label}</span>
-              </button>
-            )
+              </Link>
+            );
           })}
         </div>
 
-        <div className="flex justify-center p-5 mt-auto">
-          <img
-            src="/vect.png"
-            alt="Vector Illustration"
-            className="w-full max-w-xs h-auto object-contain rounded-2xl"
-          />
+        <div className="flex justify-center mt-auto">
+          <img src="/vectt.png" alt='"Designed by macrovector / Freepik"http://www.freepik.com"' className="w-full h-auto" />
         </div>
       </div>
 
@@ -274,13 +304,42 @@ export default function Penerima() {
             </h1>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                N
+          {/* Akun */}
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="flex items-center space-x-2 px-3 py-2 rounded"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {getInitial(user?.name)}
+                </div>
+                <span className="text-black font-medium">
+                  {user?.name || "Guest"}
+                </span>
               </div>
-              <span className="text-gray-700 font-medium">Najmi Umar Fauzi</span>
-            </div>
+              <svg
+                className={`w-4 h-4 text-black transition-transform ${showDropdown ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown */}
+            {showDropdown && (
+              <div className="absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 hover:rounded-lg"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </nav>
 
@@ -552,3 +611,5 @@ export default function Penerima() {
     </div>
   )
 }
+
+export default withRole(Penerima, ["admin"]);
