@@ -83,21 +83,21 @@ type ColorType = "blue" | "green" | "purple" | "orange";
 
 // ====== DATA DUMMY UNTUK CHART (UNTUK DEMO) ======
 const mockChartData: ChartData[] = [
-  { date: '2025-09-01', pertalite: 320000, solar: 185000 },
-  { date: '2025-09-02', pertalite: 245000, solar: 142200 },
-  { date: '2025-09-03', pertalite: 180000, solar: 95000 },
-  { date: '2025-09-04', pertalite: 410000, solar: 213000 },
-  { date: '2025-09-05', pertalite: 225700, solar: 90000 },
-  { date: '2025-09-06', pertalite: 260600, solar: 70000 },
-  { date: '2025-09-07', pertalite: 335000, solar: 84000 },
-  { date: '2025-09-08', pertalite: 342400, solar: 80000 },
-  { date: '2025-09-09', pertalite: 205200, solar: 90000 },
-  { date: '2025-09-10', pertalite: 385000, solar: 191000 },
-  { date: '2025-09-11', pertalite: 285800, solar: 86000 },
-  { date: '2025-09-12', pertalite: 180000, solar: 87000 },
-  { date: '2025-09-13', pertalite: 405000, solar: 186000 },
-  { date: '2025-09-14', pertalite: 268200, solar: 75000 },
-  { date: '2025-09-15', pertalite: 235200, solar: 81000 }
+  { date: '2026-01-01', pertalite: 320000, solar: 185000 },
+  { date: '2026-01-02', pertalite: 245000, solar: 142200 },
+  { date: '2026-01-03', pertalite: 180000, solar: 95000 },
+  { date: '2026-01-04', pertalite: 410000, solar: 213000 },
+  { date: '2026-01-05', pertalite: 225700, solar: 90000 },
+  { date: '2026-01-06', pertalite: 260600, solar: 70000 },
+  { date: '2026-01-07', pertalite: 335000, solar: 84000 },
+  { date: '2026-01-08', pertalite: 342400, solar: 80000 },
+  { date: '2026-01-09', pertalite: 205200, solar: 90000 },
+  { date: '2026-01-10', pertalite: 385000, solar: 191000 },
+  { date: '2026-01-11', pertalite: 285800, solar: 86000 },
+  { date: '2026-01-12', pertalite: 180000, solar: 87000 },
+  { date: '2026-01-13', pertalite: 405000, solar: 186000 },
+  { date: '2026-01-14', pertalite: 268200, solar: 75000 },
+  { date: '2026-01-15', pertalite: 235200, solar: 81000 }
 ];
 
 function Penjualan() {
